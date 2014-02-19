@@ -27,27 +27,6 @@ public class TimerService extends Service {
 
     private static final String TAG = "TimerService";
     private static final int NOTIFICATION_ID = 1;
-    private CountDownTimer brewCountDownTimer;
-    private MediaPlayer player;
-    private long  msTick;
-    private TimerCallback mTimerCallback;
-    private String ticker;
-
-    private AlarmManager brewAlarmManager;
-    private int id;
-
-    public class  LocalBinder extends Binder {
-        TimerService getService() {
-            return  TimerService.this;
-        }
-    }
-    public boolean isBrewing;
-
-    private Timer m_timer;
-    private LocalBinder m_binder = new LocalBinder();
-    private NotificationManager m_notificationMgr;
-    private Notification m_notification;
-    private int msTimeLeft;
     // Timer to update the ongoing notification
     private final long mFrequency = 100;    // milliseconds
     private final int TICK_WHAT = 2;
@@ -57,6 +36,19 @@ public class TimerService extends Service {
             sendMessageDelayed(Message.obtain(this, TICK_WHAT), mFrequency);
         }
     };
+    public boolean isBrewing;
+    private CountDownTimer brewCountDownTimer;
+    private MediaPlayer player;
+    private long  msTick;
+    private TimerCallback mTimerCallback;
+    private String ticker;
+    private AlarmManager brewAlarmManager;
+    private int id;
+    private Timer m_timer;
+    private LocalBinder m_binder = new LocalBinder();
+    private NotificationManager m_notificationMgr;
+    private Notification m_notification;
+    private int msTimeLeft;
 
     @Override
     public IBinder onBind(Intent intent) {
@@ -137,11 +129,11 @@ public class TimerService extends Service {
         Intent notificationIntent = new Intent(this, StopwatchActivity.class);
         PendingIntent contentIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
 
+
         // the next two lines initialize the Notification, using the configurations above
         m_notification.setLatestEventInfo(context, contentTitle,stringTick, contentIntent);
         m_notificationMgr.notify(NOTIFICATION_ID, m_notification);
     }
-
 
     public void showNotification() {
         Log.d(TAG, "showing notification");
@@ -156,9 +148,6 @@ public class TimerService extends Service {
         m_notificationMgr.cancel(NOTIFICATION_ID);
         mHandler.removeMessages(TICK_WHAT);
     }
-
-
-
 
     public void start(int timeleft) {
         msTimeLeft = timeleft;
@@ -214,11 +203,16 @@ public class TimerService extends Service {
 
 
 
-
             @Override
-            public void onFinish() {
-                isBrewing = false;
+            public void  onFinish() {
+                if( isBrewing = false )
+                {
+
+
+                triggerAlarm();
                 player.start();
+                }
+
 
 
             }
@@ -234,7 +228,25 @@ public class TimerService extends Service {
         showNotification();
     }
 
+    public void triggerAlarm() {
 
+
+        player.start();
+
+
+
+        //  Toast.makeText(this, "TIMER", Toast.LENGTH_SHORT).show();
+
+        // ALARM MANAGER
+        // PENDING INTENT
+        // BROADCAST _> MAIN ACTIVITY
+
+        Intent alarmIntent = new Intent(this, StopwatchActivity.class);
+        alarmIntent.putExtra("alertDialog", 20);
+        alarmIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(alarmIntent);
+
+    }
 
     public void stop() {
         Log.d(TAG, "stop");
@@ -242,6 +254,10 @@ public class TimerService extends Service {
         brewCountDownTimer.cancel();
 
         hideNotification();
+    }
+
+    private String formatDigits(long num) {
+        return (num < 10) ? "0" + num : new Long(num).toString();
     }
 
 
@@ -252,11 +268,6 @@ public class TimerService extends Service {
    /* public String getFormattedElapsedTime() {
         return formatElapsedTime(getElapsedTime());
     }*/
-
-
-    private String formatDigits(long num) {
-        return (num < 10) ? "0" + num : new Long(num).toString();
-    }
 
     private void notifyTimerCallback(String notifiTimer) {
         if(mTimerCallback != null) {
@@ -270,6 +281,12 @@ public class TimerService extends Service {
 
     public interface TimerCallback {
         void onTimerValueChanged(String timerValue);
+    }
+
+    public class  LocalBinder extends Binder {
+        TimerService getService() {
+            return  TimerService.this;
+        }
     }
 
 
